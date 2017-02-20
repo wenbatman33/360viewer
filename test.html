@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+<meta charset="utf-8">
+<title>GSVPano.js TEST</title>
+<style>
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+body {
+	font: 12px/14px tahoma, sans-serif;
+	padding: 10px;
+}
+h1{
+	font-size: 24px;
+	line-height: 34px;
+}
+canvas{
+	margin-top: 10px
+}
+#map_canvas {
+	width: 832px;
+	height: 300px;
+}
+#messegeArea {
+	height: 4em;
+}
+</style>
+</head>
+<body>
+<p>地図上(道路)をクリックしてください</p>
+<br/>
+<div id="map_canvas"></div>
+<div id="messegeArea">
+	<div id="messageDiv" ></div>
+	<div id="errorDiv" ></div>
+</div>
+<div id="GSVPano"></div>
+
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="js/GSVPano.min.js"></script>
+
+
+<script>
+
+var messageDiv = document.getElementById( 'messageDiv' );
+var errorDiv = document.getElementById( 'errorDiv' );
+
+function showError( message ) {
+	errorDiv.innerHTML = message;
+}
+
+function showMessage( message ) {
+	messageDiv.innerHTML += message;
+}
+
+window.addEventListener( 'load', function() {
+
+	/*GSVpano　メッセージ出力設定*/
+	showMessage( 'Starting...<br/>' );
+
+	loader = new GSVPANO.PanoLoader( {
+		zoom: 1
+	} );
+
+	loader.onSizeChange = function() {
+		showMessage( 'Size changed' );
+	};
+	;
+
+	loader.onPanoramaData = function( result ) {
+		showMessage( 'Panorama OK.<br/>Load started' );
+	}
+
+	loader.onNoPanoramaData = function( status ) {
+		showError("ストリートビュー非対応エリアです: " + status);
+	}
+
+	loader.onProgress = function( p ) {
+		showMessage( '.' );
+	};
+
+	loader.onError = function( message ) {
+		showMessage( 'Error: ' + message );
+	};
+
+	loader.onPanoramaLoad = function() {
+
+		showMessage( ' finished.<br/>' );
+		document.querySelector("#GSVPano").appendChild( this.canvas );
+		showMessage( 'Panorama loaded, street view data ' + this.copyright + '.<br/>' );
+
+	};
+
+
+	// Google Maps API 設定
+	var mapDiv = document.getElementById("map_canvas");
+	var map = new google.maps.Map(mapDiv, {
+		center : new google.maps.LatLng(36.322356, 139.013057),
+		navigationControl: true,
+		draggableCursor: 'crosshair',draggingCursor: 'move',
+		zoom : 15,
+		mapTypeId : google.maps.MapTypeId.ROADMAP
+	});
+
+	//クリックイベント設定
+	google.maps.event.addListener(map, 'click', function(event){
+		console.log(event.latLng);
+		messageDiv.innerHTML = "";
+		errorDiv.innerHTML = "";
+		loader.load(event.latLng); //パノラマを表示
+	});
+
+});
+
+</script>
+
+</body>
+</html>
